@@ -1,9 +1,11 @@
 #![feature(try_blocks)]
+#![allow(clippy::modulo_one)]
 
 mod assets;
 mod boilerplates;
 mod controls;
 mod modes;
+mod simulator;
 mod utils;
 
 // `getrandom` doesn't support WASM so we use quadrand's rng for it.
@@ -20,11 +22,11 @@ use crate::{
 
 use macroquad::prelude::*;
 
-const WIDTH: f32 = 640.0;
-const HEIGHT: f32 = 480.0;
+const WIDTH: f32 = 320.0;
+const HEIGHT: f32 = 240.0;
 const ASPECT_RATIO: f32 = WIDTH / HEIGHT;
 
-const UPDATES_PER_DRAW: u64 = 100;
+const UPDATES_PER_DRAW: u64 = 1;
 const UPDATE_DT: f32 = 1.0 / (30.0 * UPDATES_PER_DRAW as f32);
 
 /// The `macroquad::main` macro uses this.
@@ -101,10 +103,7 @@ async fn gameloop() {
 
         let drawer = match draw_rx.try_recv() {
             Ok(it) => it,
-            Err(TryRecvError::Empty) => {
-                eprintln!("Waiting on updates!");
-                draw_rx.recv().unwrap()
-            }
+            Err(TryRecvError::Empty) => draw_rx.recv().unwrap(),
             Err(TryRecvError::Disconnected) => panic!("The draw channel closed!"),
         };
 
@@ -117,7 +116,7 @@ async fn gameloop() {
         // Done rendering to the canvas; go back to our normal camera
         // to size the canvas
         set_default_camera();
-        clear_background(LIGHTGRAY);
+        clear_background(BLACK);
 
         // Figure out the drawbox.
         // these are how much wider/taller the window is than the content

@@ -13,6 +13,8 @@ use rand::Rng;
 
 use std::f32::consts::TAU;
 
+use super::ModePlaying;
+
 const BANNER_DISPLAY_SIZE: f32 = WIDTH * 0.6;
 const BANNER_START_TIME: f64 = 0.25;
 
@@ -91,11 +93,10 @@ impl Gamemode for ModeLogo {
         }
 
         if macroquad::time::get_time() - self.start_time > 5.0
-            || controls.clicked_down(Control::Advance)
+            || controls.clicked_down(Control::Select)
         {
-            // Put your "title screen" state here or something!
-            // Right now it just loops
-            Transition::Swap(Box::new(ModeLogo::new()))
+            macroquad::audio::stop_sound(assets.sounds.title_jingle);
+            Transition::Swap(Box::new(ModePlaying::new_temp()))
         } else {
             Transition::None
         }

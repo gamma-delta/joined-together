@@ -13,7 +13,17 @@ use std::collections::HashMap;
 /// The controls
 #[derive(Enum, Copy, Clone)]
 pub enum Control {
-    Advance,
+    Select,
+
+    Up,
+    Down,
+    Left,
+    Right,
+
+    Start,
+    StepOnce,
+
+    Escape,
 }
 
 /// Combo keycode and mouse button code
@@ -45,8 +55,26 @@ impl InputSubscriber {
         let mut controls = HashMap::new();
 
         // Put your controls here
-        controls.insert(InputCode::Mouse(MouseButton::Left), Control::Advance);
-        controls.insert(InputCode::Key(KeyCode::Enter), Control::Advance);
+        for (code, control) in [
+            (KeyCode::Enter, Control::Select),
+            //
+            (KeyCode::W, Control::Up),
+            (KeyCode::Up, Control::Up),
+            (KeyCode::A, Control::Left),
+            (KeyCode::Left, Control::Left),
+            (KeyCode::S, Control::Down),
+            (KeyCode::Down, Control::Down),
+            (KeyCode::D, Control::Right),
+            (KeyCode::Right, Control::Right),
+            //
+            (KeyCode::Space, Control::Start),
+            (KeyCode::Tab, Control::StepOnce),
+            //
+            (KeyCode::Escape, Control::Escape),
+        ] {
+            controls.insert(InputCode::Key(code), control);
+        }
+        controls.insert(InputCode::Mouse(MouseButton::Left), Control::Select);
 
         controls
     }

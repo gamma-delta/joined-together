@@ -1,0 +1,24 @@
+Something like Gunpoint with electricity
+
+Block pushing sokoban game where you can link two blocks so pushes match
+
+Woodworking simulator 2k21
+
+Two sisters with linked souls in a block pushing game. 
+When controlling one, the other sister mirrors her.
+When controlling the other one, the other sister copies her.
+
+Some kind of royal marriage thing where you are selecting for traits?
+a la bene gesserit?
+this might not be something i want to make a game about
+
+Robots that copy each other's commands, except there's radio-blocking
+stuff like a faraday cage that blocks the signal.
+(is this join-y enough)
+Maybe the goal is to get all of them to touch each other
+
+Chemical building game like opus magnum, probably too hard to make in 48 hours
+
+Technician servicing connectors on gigantic spaceships,
+laying wires and cables and stuff to connect two incompatible connectors.
+Have fun reading a manual... I like this idea...

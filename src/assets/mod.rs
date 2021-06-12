@@ -9,10 +9,10 @@ use once_cell::sync::Lazy;
 
 use std::path::PathBuf;
 
-#[derive(Clone)]
 pub struct Assets {
     pub textures: Textures,
     pub sounds: Sounds,
+    pub shaders: Shaders,
 }
 
 impl Assets {
@@ -20,24 +20,31 @@ impl Assets {
         Self {
             textures: Textures::init().await,
             sounds: Sounds::init().await,
+            shaders: Shaders::init().await,
         }
     }
 }
 
-#[derive(Clone)]
 pub struct Textures {
     pub title_banner: Texture2D,
+
+    pub cable_atlas: Texture2D,
+    pub port_atlas: Texture2D,
+    pub error_atlas: Texture2D,
 }
 
 impl Textures {
     async fn init() -> Self {
         Self {
             title_banner: texture("title/banner").await,
+
+            cable_atlas: texture("cable_atlas").await,
+            port_atlas: texture("port_atlas").await,
+            error_atlas: texture("error_atlas").await,
         }
     }
 }
 
-#[derive(Clone)]
 pub struct Sounds {
     pub title_jingle: Sound,
 }
@@ -46,6 +53,34 @@ impl Sounds {
     async fn init() -> Self {
         Self {
             title_jingle: sound("title/jingle").await,
+        }
+    }
+}
+
+pub struct Shaders {
+    pub space: Material,
+}
+
+impl Shaders {
+    async fn init() -> Self {
+        Self {
+            space: material_vert_frag(
+                "standard",
+                "space",
+                MaterialParams {
+                    textures: Vec::new(),
+                    uniforms: vec![(String::from("time"), UniformType::Float1)],
+                    pipeline_params: PipelineParams {
+                        color_blend: Some(BlendState::new(
+                            Equation::Add,
+                            BlendFactor::Value(BlendValue::SourceAlpha),
+                            BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
+                        )),
+                        ..Default::default()
+                    },
+                },
+            )
+            .await,
         }
     }
 }

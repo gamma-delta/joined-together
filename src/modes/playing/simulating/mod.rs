@@ -9,6 +9,7 @@ use crate::{
     simulator::{
         board::Board,
         floodfill::{FloodFillError, FloodFiller},
+        transport::Cable,
     },
 };
 
@@ -18,6 +19,9 @@ use super::ModePlaying;
 pub(super) const STEP_TIME: u64 = 30;
 /// Time to do steps when zooming via tab
 const STEP_TIME_ON_DEMAND: u64 = 10;
+
+/// Amount the win box goes in by per frame
+const WIN_BOX_ENTER_SPEED: f32 = 2.0 / 30.0;
 
 #[derive(Clone)]
 pub(super) struct ModeSimulating {
@@ -41,9 +45,9 @@ impl ModeSimulating {
 
     /// Update my advancing method.
     /// Return if we should step.
-    pub fn handle_advance(&mut self, controls: &InputSubscriber, frame_info: FrameInfo) -> bool {
+    fn handle_advance(&mut self, controls: &InputSubscriber, frame_info: FrameInfo) -> bool {
         match self.advance_method {
-            AdvanceMethod::Errors(..) => false,
+            AdvanceMethod::Errors(..) | AdvanceMethod::WinScreen { .. } => false,
             _ if controls.clicked_down(Control::StepOnce) => {
                 self.advance_method = AdvanceMethod::OnDemand;
                 true
@@ -78,13 +82,51 @@ impl ModeSimulating {
         }
     }
 
-    pub fn step(&mut self) {
-        if !self.advance_method.is_errors() {
+    fn step(&mut self) {
+        if !self.advance_method.is_special() {
             let errors = self.flooder.step(&self.board);
             if !errors.is_empty() {
                 self.advance_method = AdvanceMethod::Errors(errors);
+            } else if self.flooder.did_win() {
+                // pog
+                self.advance_method = AdvanceMethod::WinScreen {
+                    text: self.get_win_text(),
+                    appear_progress: 0.0,
+                }
             }
         }
+    }
+
+    fn get_win_text(&self) -> String {
+        let chars_across = 20usize;
+
+        // subtract length of "CYCLES:"
+        let cycles_metric = format!(
+            "CYCLES:{:.>width$}",
+            self.flooder.cycles,
+            width = chars_across - 7
+        );
+
+        let crossovers = self
+            .board
+            .cables
+            .values()
+            .filter(|x| matches!(x, Cable::Crossover { .. }))
+            .count();
+        // length of "CROSSOVERS:"
+        let crossover_metric = format!(
+            "CROSSOVERS:{:.>width$}",
+            crossovers,
+            width = chars_across - 11
+        );
+
+        format!(
+            "{}\n{}\n\n{:^width$}",
+            cycles_metric,
+            crossover_metric,
+            "CLICK ANYWHERE TO CONTINUE",
+            width = chars_across
+        )
     }
 }
 
@@ -99,9 +141,17 @@ impl Gamemode for ModeSimulating {
             return Transition::Pop;
         }
 
-        let advance = self.handle_advance(controls, frame_info);
-        if advance {
-            self.step();
+        if let AdvanceMethod::WinScreen {
+            appear_progress, ..
+        } = &mut self.advance_method
+        {
+            *appear_progress += WIN_BOX_ENTER_SPEED;
+            *appear_progress = appear_progress.clamp(0.0, 1.0);
+        } else {
+            let advance = self.handle_advance(controls, frame_info);
+            if advance {
+                self.step();
+            }
         }
 
         Transition::None
@@ -120,11 +170,21 @@ pub(super) enum AdvanceMethod {
     OnDemand,
     /// Wait there were errors!
     Errors(Vec<FloodFillError>),
+    /// Haha (johnathon) we are not actually stepping, instead here's our win screen
+    WinScreen {
+        /// Progress from 0-1 how in-view our textbox is
+        appear_progress: f32,
+        /// Text appearing on the win screen
+        text: String,
+    },
 }
 
 impl AdvanceMethod {
-    /// Returns `true` if the advance_method is [`Errors`].
-    fn is_errors(&self) -> bool {
-        matches!(self, Self::Errors(..))
+    /// Returns `true` if the method is special and won't actually advance
+    fn is_special(&self) -> bool {
+        matches!(
+            self,
+            AdvanceMethod::Errors(..) | AdvanceMethod::WinScreen { .. }
+        )
     }
 }

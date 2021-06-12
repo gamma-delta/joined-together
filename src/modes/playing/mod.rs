@@ -48,29 +48,37 @@ pub struct Selection {
 
 impl ModePlaying {
     pub fn new_temp() -> Self {
+        // let left = OmniversalConnector {
+        //     ports: vec![
+        //         Some(Port::Source(Resource::Water)),
+        //         Some(Port::Source(Resource::Fuel)),
+        //         None,
+        //         None,
+        //         None,
+        //         Some(Port::Sink(Resource::Data(0))),
+        //         Some(Port::Sink(Resource::Electricity(5))),
+        //     ],
+        //     slider: vec![false, false, false, false, false],
+        // };
+        // let right = OmniversalConnector {
+        //     ports: vec![
+        //         Some(Port::Source(Resource::Electricity(5))),
+        //         Some(Port::Source(Resource::Data(0))),
+        //         None,
+        //         None,
+        //         None,
+        //         Some(Port::Sink(Resource::Fuel)),
+        //         Some(Port::Sink(Resource::Water)),
+        //     ],
+        //     slider: vec![false, false, false, false, false, false, false],
+        // };
         let left = OmniversalConnector {
-            ports: vec![
-                Some(Port::Source(Resource::Water)),
-                Some(Port::Source(Resource::Fuel)),
-                None,
-                None,
-                None,
-                Some(Port::Sink(Resource::Data(0))),
-                Some(Port::Sink(Resource::Electricity(5))),
-            ],
+            ports: vec![None, None, Some(Port::Source(Resource::Water)), None, None],
             slider: vec![false, false, false, false, false],
         };
         let right = OmniversalConnector {
-            ports: vec![
-                Some(Port::Source(Resource::Electricity(5))),
-                Some(Port::Source(Resource::Data(0))),
-                None,
-                None,
-                None,
-                Some(Port::Sink(Resource::Fuel)),
-                Some(Port::Sink(Resource::Water)),
-            ],
-            slider: vec![false, false, false, false, false, false, false],
+            ports: vec![None, None, Some(Port::Sink(Resource::Water)), None, None],
+            slider: vec![false, false, false, false, false],
         };
 
         Self {
@@ -178,28 +186,15 @@ impl ModePlaying {
                                 };
 
                                 // We count ports as free so we can disconnect things from them
-                                let cursor = self.cursor;
-                                let cables = &selection.cables;
-                                let fully_occupied =
-                                    !current_cable.cable_outputs().iter().any(|(dir, kind)| {
-                                        let target_pos = cursor + dir;
-                                        if kind.is_some() {
-                                            if let Some(neighbor) = cables.get(&target_pos) {
-                                                let neighbor_conn =
-                                                    neighbor.cable_outputs()[dir.flip()];
-                                                // if this is some, we have two cables facing each other
-                                                neighbor_conn.is_none()
-                                            } else {
-                                                // this direction is pointing to nothing! and free!
-                                                true
-                                            }
-                                        } else {
-                                            // There's no output here so it is not free
-                                            false
-                                        }
-                                    });
+                                let fully_occupied = is_fully_occupied(
+                                    self.cursor,
+                                    &selection.cables,
+                                    &self.board,
+                                    false,
+                                    false,
+                                );
 
-                                if current_target_connect && !fully_occupied {
+                                if current_target_connect && (fully_occupied != Some(true)) {
                                     info!("Special backtrack, deleting {:?}", self.cursor);
                                     Continue::DontAdd
                                 } else {
@@ -268,10 +263,18 @@ impl ModePlaying {
                                     ),
                                 };
                                 // Also, no editing something that is entirely occupied
-                                let fully_occupied =
-                                    is_fully_occupied(self.cursor, &selection.cables, &self.board);
+                                let fully_occupied = is_fully_occupied(
+                                    self.cursor,
+                                    &selection.cables,
+                                    &self.board,
+                                    true,
+                                    true,
+                                );
+                                // Also, no going out of bounds or onto something that isn't a port
+                                let in_bounds = self.board.is_in_cable_area(maybe_cursor)
+                                    || self.board.get_port(maybe_cursor).is_some();
 
-                                if ok_dir && (fully_occupied != Some(true)) {
+                                if ok_dir && (fully_occupied != Some(true)) && in_bounds {
                                     // Alright we're cleared to place our new cable,
                                     // and maybe edit this one.
                                     let current_kind = match current_cable {
@@ -309,57 +312,109 @@ impl ModePlaying {
                                     } else if let Some((_, prev_dir)) = selection.prev_info.last() {
                                         // We *exited* via `prev_dir`, so we enter via it flipped
                                         Some(Cable::from_dirs(current_kind, dir, prev_dir.flip()))
+                                    } else if let Some(current_cable) = current_cable {
+                                        // We don't have a backup to rely on, so we have to figure out
+                                        // where we used to be facing.
+                                        // The "stable" direction is a direction:
+                                        // - that's connected to something
+                                        // - that isn't the direction we're exiting in
+                                        let cursor = self.cursor;
+                                        let cables = &selection.cables;
+                                        let board = &self.board;
+                                        let stable = current_cable.cable_outputs().iter().find_map(
+                                            |(look_dir, kind)| {
+                                                if look_dir == dir {
+                                                    return None;
+                                                }
+                                                if let Some(kind) = *kind {
+                                                    // Check cables and ports in this direction
+                                                    let target_pos = cursor + look_dir;
+                                                    if let Some(neighbor) = cables.get(&target_pos)
+                                                    {
+                                                        let neighbor_conn =
+                                                            neighbor.cable_outputs()[dir.flip()];
+                                                        // if this is some, we have two cables facing each other
+                                                        if neighbor_conn.is_some() {
+                                                            // we're wired up!
+                                                            Some((look_dir, kind))
+                                                        } else {
+                                                            None
+                                                        }
+                                                    } else if let Some((_, port_dir)) =
+                                                        board.get_port(target_pos)
+                                                    {
+                                                        // if these are the same, that means these face each other so it's occupied
+                                                        if port_dir == dir.flip() {
+                                                            Some((look_dir, kind))
+                                                        } else {
+                                                            None
+                                                        }
+                                                    } else {
+                                                        // this direction is pointing to nothing
+                                                        None
+                                                    }
+                                                } else {
+                                                    // Not connected to anything in this dir
+                                                    None
+                                                }
+                                            },
+                                        );
+                                        stable.map(|(stable_dir, kind)| {
+                                            Cable::from_dirs(kind, dir, stable_dir)
+                                        })
                                     } else {
-                                        // Keep it the same.
                                         // This handily works out if current_cable is None
                                         // cause that means we don't want to put something over our port
-                                        current_cable.cloned()
+                                        None
                                     };
                                     // Now, either insert a new cable,
                                     // or update an existing cable to be a crossover.
-                                    let success = match selection.cables.get_mut(&maybe_cursor) {
-                                        None => {
-                                            // We are not clobbering anything! Nice!
-                                            if self.board.get_port(maybe_cursor).is_none() {
-                                                // Don't try to put a pipe on top of a port
-                                                selection.cables.insert(
-                                                    maybe_cursor,
-                                                    Cable::Straight {
-                                                        horizontal: dir.is_horizontal(),
-                                                        kind: current_kind,
-                                                    },
-                                                );
-                                            }
-                                            // but in any case we did ok
-                                            true
-                                        }
-                                        Some(Cable::Straight {
-                                            horizontal: target_horizontal,
-                                            kind: target_kind,
-                                        }) => {
-                                            // OK we need to make sure we are *crossing* it.
-                                            if *target_horizontal != dir.is_horizontal() {
-                                                // nice let's insert our crossover
-                                                let (h, v) = if *target_horizontal {
-                                                    (*target_kind, current_kind)
+                                    let (success, end) =
+                                        match selection.cables.get_mut(&maybe_cursor) {
+                                            None => {
+                                                // We are not clobbering anything! Nice!
+                                                if self.board.get_port(maybe_cursor).is_none() {
+                                                    // Don't try to put a pipe on top of a port
+                                                    selection.cables.insert(
+                                                        maybe_cursor,
+                                                        Cable::Straight {
+                                                            horizontal: dir.is_horizontal(),
+                                                            kind: current_kind,
+                                                        },
+                                                    );
+                                                    (true, false)
                                                 } else {
-                                                    (current_kind, *target_kind)
-                                                };
-                                                selection.cables.insert(
-                                                    maybe_cursor,
-                                                    Cable::Crossover {
-                                                        horiz_kind: h,
-                                                        vert_kind: v,
-                                                    },
-                                                );
-                                                true
-                                            } else {
-                                                false
+                                                    // we are mousing over a port! time to end
+                                                    (true, true)
+                                                }
                                             }
-                                        }
-                                        // trying to clobber something we can't turn into a crossover
-                                        _ => false,
-                                    };
+                                            Some(Cable::Straight {
+                                                horizontal: target_horizontal,
+                                                kind: target_kind,
+                                            }) => {
+                                                // OK we need to make sure we are *crossing* it.
+                                                if *target_horizontal != dir.is_horizontal() {
+                                                    // nice let's insert our crossover
+                                                    let (h, v) = if *target_horizontal {
+                                                        (*target_kind, current_kind)
+                                                    } else {
+                                                        (current_kind, *target_kind)
+                                                    };
+                                                    selection.cables.insert(
+                                                        maybe_cursor,
+                                                        Cable::Crossover {
+                                                            horiz_kind: h,
+                                                            vert_kind: v,
+                                                        },
+                                                    );
+                                                    (true, false)
+                                                } else {
+                                                    (false, false)
+                                                }
+                                            }
+                                            // trying to clobber something we can't turn into a crossover
+                                            _ => (false, false),
+                                        };
                                     if success {
                                         // hooray
                                         if let Some(new_current_cable) = new_current_cable {
@@ -367,17 +422,13 @@ impl ModePlaying {
                                         }
                                         selection.prev_info.push((self.cursor, dir));
 
-                                        // Now that we placed this, is it fully occupied?
-                                        if is_fully_occupied(
-                                            maybe_cursor,
-                                            &selection.cables,
-                                            &self.board,
-                                        ) == Some(true)
-                                        {
-                                            // we closed a gap! let's quit editing
+                                        if end {
+                                            // time to quit
                                             let sel = self.selection.take().unwrap();
                                             self.board.cables = sel.cables;
                                         }
+
+                                        self.cursor = maybe_cursor;
                                     }
                                 } else {
                                     info!("Failed to place new cable; ok_dir: {}; fully_occupied: {:?}", ok_dir, fully_occupied);
@@ -391,13 +442,13 @@ impl ModePlaying {
                             // we backtracked all the way to a port!
                             let sel = self.selection.take().unwrap();
                             self.board.cables = sel.cables;
+                            self.cursor = maybe_cursor;
                         } else {
                             // We backtracked just once
                             selection.prev_info.pop();
+                            self.cursor = maybe_cursor;
                         }
                     } // Else we moved too fast, just keep it the same...
-
-                    self.cursor = maybe_cursor;
                 }
             }
         }
@@ -449,10 +500,17 @@ fn draw_space(assets: &Assets, time: f32) {
 /// Returns `None` if there is no cable there
 ///
 /// `port_board` is used only for the ports.
+///
+/// If `count_ports` is false, ports count as open space.
+///
+/// If `allow_bend` is true, it will check if there's any open space
+/// next to directions it doesn't have a cable too.
 fn is_fully_occupied(
     pos: ICoord,
     cables: &AHashMap<ICoord, Cable>,
     port_board: &Board,
+    count_ports: bool,
+    allow_bend: bool,
 ) -> Option<bool> {
     cables.get(&pos).map(|cable| {
         // Check if none (not any) of the sides are free.
@@ -463,7 +521,9 @@ fn is_fully_occupied(
                     let neighbor_conn = neighbor.cable_outputs()[dir.flip()];
                     // if this is some, we have two cables facing each other
                     neighbor_conn.is_none()
-                } else if let Some((_, port_dir)) = port_board.get_port(target_pos) {
+                } else if let (true, Some((_, port_dir))) =
+                    (count_ports, port_board.get_port(target_pos))
+                {
                     // if these are the same, that means these face each other so it's occupied
                     port_dir != dir.flip()
                 } else {
@@ -472,7 +532,7 @@ fn is_fully_occupied(
                 }
             } else {
                 // There's no output here so it is not free
-                false
+                allow_bend
             }
         })
     })

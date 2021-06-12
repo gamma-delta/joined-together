@@ -58,10 +58,11 @@ impl Cable {
             Cable::Straight { kind, horizontal } => {
                 if !kind.can_carry(&resource) {
                     Err(TransferError::BadCableKind)
-                } else if *horizontal != enter_dir.is_horizontal() {
-                    Err(TransferError::NoEntrance)
+                } else if *horizontal == enter_dir.is_horizontal() {
+                    // keep going in the direction i came in
+                    Ok(enter_dir)
                 } else {
-                    Ok(enter_dir.flip())
+                    Err(TransferError::NoEntrance)
                 }
             }
             Cable::Bent { kind, ccw_dir } => {
@@ -89,7 +90,8 @@ impl Cable {
                     vert_kind
                 };
                 if check_kind.can_carry(&resource) {
-                    Ok(enter_dir.flip())
+                    // Nice, keep on trucking
+                    Ok(enter_dir)
                 } else {
                     Err(TransferError::BadCableKind)
                 }

@@ -15,10 +15,11 @@ pub struct FloodFiller {
     /// Becomes None when the tip is satisfied at a Sink.
     pub tips: Vec<Option<Tip>>,
     /// Spaces we've already visited. (This should never overlap with any Tip.)
-    /// The boolean is for horizontality.
+    /// The boolean is for horizontality; were we horizontal when we were in this space?
     ///
     /// This is purely for drawing purposes and NOT for the flood-fill itself!
     pub visited: AHashMap<(ICoord, bool), Resource>,
+    pub cycles: u64,
 }
 
 #[derive(Clone, Debug)]
@@ -55,6 +56,7 @@ impl FloodFiller {
         Self {
             tips,
             visited: AHashMap::new(),
+            cycles: 0,
         }
     }
 
@@ -63,6 +65,8 @@ impl FloodFiller {
     /// If any problems happened we return them in the vector.
     /// If it's empty, we're all set!
     pub fn step(&mut self, board: &Board) -> Vec<FloodFillError> {
+        self.cycles += 1;
+
         let mut errors = Vec::new();
 
         // clippy is overzealous here
@@ -78,42 +82,52 @@ impl FloodFiller {
                     continue;
                 }
 
-                let target_pos = tip.pos + tip.facing;
-                if let Some(target_cable) = board.cables.get(&target_pos) {
-                    let out_dir = match target_cable.exit_dir(&tip.resource, tip.facing) {
+                if let Some(current_cable) = board.cables.get(&tip.pos) {
+                    let out_dir = match current_cable.exit_dir(&tip.resource, tip.facing) {
                         Ok(it) => it,
                         Err(ono) => {
                             let err = match ono {
                                 TransferError::BadCableKind => {
-                                    FloodFillError::BadCableKind(target_pos)
+                                    FloodFillError::BadCableKind(tip.pos)
                                 }
-                                TransferError::NoEntrance => FloodFillError::NoEntrance(target_pos),
+                                TransferError::NoEntrance => FloodFillError::NoEntrance(tip.pos),
                             };
                             errors.push(err);
                             continue;
                         }
                     };
-                    tip.pos = target_pos;
-                    tip.facing = out_dir;
-                } else {
-                    // Perhaps we are "spilling" into an exit.
-                    if let Some((Port::Sink(res), _)) = board.get_port(target_pos) {
-                        if res != &tip.resource {
-                            // oh no...
-                            errors.push(FloodFillError::BadOutput(target_pos, res.clone()))
-                        } else {
-                            // we are done here poggers
-                            *tip_slot = None;
-                        }
+                    let target_pos = tip.pos + out_dir;
+                    if let Some(target_cable) = board.cables.get(&target_pos) {
+                        tip.pos = target_pos;
+                        tip.facing = out_dir;
                     } else {
-                        // Nope we spill into space
-                        errors.push(FloodFillError::SpilledIntoSpace(tip.pos));
+                        // Perhaps we are "spilling" into an exit.
+                        if let Some((Port::Sink(res), _)) = board.get_port(target_pos) {
+                            if res != &tip.resource {
+                                // oh no...
+                                errors.push(FloodFillError::BadOutput(target_pos, res.clone()))
+                            } else {
+                                // we are done here poggers
+                                *tip_slot = None;
+                            }
+                        } else {
+                            // Nope we spill into space
+                            errors.push(FloodFillError::SpilledIntoSpace(target_pos));
+                        }
                     }
+                } else {
+                    // Really don't know how we got here but uh
+                    errors.push(FloodFillError::SpilledIntoSpace(tip.pos));
                 }
             }
         }
 
         errors
+    }
+
+    /// Did we win?
+    pub fn did_win(&self) -> bool {
+        self.tips.iter().all(Option::is_none)
     }
 }
 

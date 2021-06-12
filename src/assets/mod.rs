@@ -27,20 +27,28 @@ impl Assets {
 
 pub struct Textures {
     pub title_banner: Texture2D,
+    pub font: Texture2D,
 
     pub cable_atlas: Texture2D,
     pub port_atlas: Texture2D,
     pub error_atlas: Texture2D,
+
+    pub hologram_9patch: Texture2D,
+    pub you_win: Texture2D,
 }
 
 impl Textures {
     async fn init() -> Self {
         Self {
             title_banner: texture("title/banner").await,
+            font: texture("ui/font").await,
 
             cable_atlas: texture("cable_atlas").await,
             port_atlas: texture("port_atlas").await,
             error_atlas: texture("error_atlas").await,
+
+            hologram_9patch: texture("ui/hologram_9patch").await,
+            you_win: texture("ui/you_win").await,
         }
     }
 }
@@ -59,6 +67,7 @@ impl Sounds {
 
 pub struct Shaders {
     pub space: Material,
+    pub hologram: Material,
 }
 
 impl Shaders {
@@ -67,6 +76,23 @@ impl Shaders {
             space: material_vert_frag(
                 "standard",
                 "space",
+                MaterialParams {
+                    textures: Vec::new(),
+                    uniforms: vec![(String::from("time"), UniformType::Float1)],
+                    pipeline_params: PipelineParams {
+                        color_blend: Some(BlendState::new(
+                            Equation::Add,
+                            BlendFactor::Value(BlendValue::SourceAlpha),
+                            BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
+                        )),
+                        ..Default::default()
+                    },
+                },
+            )
+            .await,
+            hologram: material_vert_frag(
+                "standard",
+                "hologram",
                 MaterialParams {
                     textures: Vec::new(),
                     uniforms: vec![(String::from("time"), UniformType::Float1)],

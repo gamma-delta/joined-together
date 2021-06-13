@@ -483,7 +483,11 @@ impl Gamemode for ModePlaying {
             None
         };
         if let Some(method) = method {
-            return Transition::Push(Box::new(ModeSimulating::new(&self, method)));
+            return Transition::Push(Box::new(ModeSimulating::new(
+                &self,
+                method,
+                frame_info.frames_ran,
+            )));
         }
 
         self.handle_selection(controls);

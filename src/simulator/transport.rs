@@ -1,6 +1,14 @@
+use std::f32;
+
 use cogs_gamedev::grids::{Direction4, Rotation};
 use enum_map::{enum_map, EnumMap};
+use macroquad::{
+    color::hsl_to_rgb,
+    prelude::{Color, Vec4Swizzles},
+};
 use serde::{Deserialize, Serialize};
+
+use crate::utils::draw;
 
 /// Anything that can be carried across a cable.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -20,6 +28,27 @@ impl Resource {
         match self {
             Resource::Water | Resource::Fuel => CableKind::Pipe,
             Resource::Data(_) | Resource::Electricity(_) => CableKind::Wire,
+        }
+    }
+
+    /// Get the color of this resource.
+    pub fn color(&self) -> Color {
+        match self {
+            Resource::Water => draw::hexcolor(0x4c6885_ff),
+            Resource::Fuel => draw::hexcolor(0xf0b541_ff),
+            Resource::Electricity(tw) => {
+                let col = draw::hexcolor(0x92e8c0_ff).to_vec();
+                let brightness = -1.0 / (*tw as f32 + 1.0) + 1.0;
+                let col = col.xyz() * brightness;
+                Color::new(col.x, col.y, col.z, 1.0)
+            }
+            Resource::Data(chan) => {
+                // https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
+                let golden_ratio_conjugate = 0.618_034;
+                let hue = (*chan as f32 * golden_ratio_conjugate).trunc();
+
+                hsl_to_rgb(hue, 0.6, 0.6)
+            }
         }
     }
 }
@@ -179,29 +208,19 @@ impl Cable {
                 horiz_kind,
                 vert_kind,
             } => {
-                if horiz_kind == vert_kind {
-                    // Use the special crossover texture
-                    let sx = 96.0;
-                    let sy = match horiz_kind {
-                        CableKind::Pipe => 0.0,
-                        CableKind::Wire => 16.0,
-                    };
-                    ((sx, sy), None)
-                } else {
-                    // pretend there are two straight cables.
-                    // TODO: which looks better on top?
-                    let c1 = Cable::Straight {
-                        kind: *horiz_kind,
-                        horizontal: true,
-                    };
-                    let c2 = Cable::Straight {
-                        kind: *vert_kind,
-                        horizontal: false,
-                    };
-                    let (sxy1, _) = c1.get_slices();
-                    let (sxy2, _) = c2.get_slices();
-                    (sxy1, Some(sxy2))
-                }
+                // pretend there are two straight cables.
+                // TODO: which looks better on top?
+                let c1 = Cable::Straight {
+                    kind: *horiz_kind,
+                    horizontal: true,
+                };
+                let c2 = Cable::Straight {
+                    kind: *vert_kind,
+                    horizontal: false,
+                };
+                let (sxy1, _) = c1.get_slices();
+                let (sxy2, _) = c2.get_slices();
+                (sxy1, Some(sxy2))
             }
         }
     }

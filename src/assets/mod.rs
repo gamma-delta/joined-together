@@ -80,6 +80,7 @@ impl Sounds {
 pub struct Shaders {
     pub space: Material,
     pub hologram: Material,
+    pub cables: Material,
 }
 
 impl Shaders {
@@ -109,6 +110,26 @@ impl Shaders {
                 MaterialParams {
                     textures: Vec::new(),
                     uniforms: vec![(String::from("time"), UniformType::Float1)],
+                    pipeline_params: PipelineParams {
+                        color_blend: Some(BlendState::new(
+                            Equation::Add,
+                            BlendFactor::Value(BlendValue::SourceAlpha),
+                            BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
+                        )),
+                        ..Default::default()
+                    },
+                },
+            )
+            .await,
+            cables: material_vert_frag(
+                "standard",
+                "cables",
+                MaterialParams {
+                    textures: Vec::new(),
+                    uniforms: vec![
+                        (String::from("progress"), UniformType::Float4),
+                        (String::from("isPipe"), UniformType::Int1),
+                    ],
                     pipeline_params: PipelineParams {
                         color_blend: Some(BlendState::new(
                             Equation::Add,

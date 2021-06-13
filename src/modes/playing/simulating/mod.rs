@@ -39,10 +39,12 @@ pub(super) struct ModeSimulating {
     level_key: String,
     level_idx: usize,
     level_name: String,
+
+    step_start: u64,
 }
 
 impl ModeSimulating {
-    pub fn new(mode: &ModePlaying, advance_method: AdvanceMethod) -> Self {
+    pub fn new(mode: &ModePlaying, advance_method: AdvanceMethod, current_frame: u64) -> Self {
         Self {
             board: mode.board.clone(),
             flooder: FloodFiller::new(&mode.board),
@@ -51,6 +53,7 @@ impl ModeSimulating {
             level_key: mode.level_key.clone(),
             level_idx: mode.level_idx,
             level_name: mode.level_name.clone(),
+            step_start: current_frame,
         }
     }
 
@@ -185,6 +188,7 @@ impl Gamemode for ModeSimulating {
         } else {
             let advance = self.handle_advance(controls, frame_info);
             if advance {
+                self.step_start = frame_info.frames_ran;
                 self.step();
             }
         }

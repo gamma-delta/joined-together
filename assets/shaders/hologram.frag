@@ -26,7 +26,15 @@ vec3 grad(float hash) {
     // Also a cuboctahedral vertex
     // And corresponds to the face of its dual, the rhombic dodecahedron
     vec3 cuboct = cube;
-    cuboct[int(hash / 16.0)] = 0.0;
+    // == Edit to make this a constant index for webgl
+    int hashFloor = int(hash / 16.0);
+    if(hashFloor == 0) {
+        cuboct.x = 0.0;
+    } else if(hashFloor == 1) {
+        cuboct.y = 0.0;
+    } else if(hashFloor == 2) {
+        cuboct.z = 0.0;
+    }
 
     // In a funky way, pick one of the four points on the rhombic face
     float type = mod(floor(hash / 8.0), 2.0);

@@ -2,4 +2,3 @@
 
 /web_release/assets
 /web_release/*.wasm
-/web_release/*.js

@@ -23,6 +23,7 @@ pub struct Assets {
 
 impl Assets {
     pub async fn init() -> Self {
+        info!("Initing assets");
         Self {
             textures: Textures::init().await,
             sounds: Sounds::init().await,
@@ -46,7 +47,8 @@ pub struct Textures {
 
 impl Textures {
     async fn init() -> Self {
-        Self {
+        info!("> Textures");
+        let out = Self {
             title_banner: texture("title/banner").await,
             font: texture("ui/font").await,
 
@@ -56,7 +58,9 @@ impl Textures {
 
             hologram_9patch: texture("ui/hologram_9patch").await,
             you_win: texture("ui/you_win").await,
-        }
+        };
+        info!("> End Textures");
+        out
     }
 }
 
@@ -66,6 +70,7 @@ pub struct Sounds {
 
 impl Sounds {
     async fn init() -> Self {
+        info!("> Sounds");
         Self {
             title_jingle: sound("title/jingle").await,
         }
@@ -79,6 +84,7 @@ pub struct Shaders {
 
 impl Shaders {
     async fn init() -> Self {
+        info!("> Shaders");
         Self {
             space: material_vert_frag(
                 "standard",
@@ -177,7 +183,9 @@ async fn material_vert_frag(vert_stub: &str, frag_stub: &str, params: MaterialPa
     )
     .await
     .unwrap();
-    load_material(&vert, &frag, params).unwrap()
+    let out = load_material(&vert, &frag, params).unwrap();
+    info!("> > Loaded {}.vert, {}.frag", vert_stub, frag_stub);
+    out
 }
 
 async fn material(path_stub: &str, params: MaterialParams) -> Material {

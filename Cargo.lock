@@ -1035,27 +1035,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "omegaquad"
-version = "0.1.0"
-dependencies = [
- "ahash 0.7.4",
- "anyhow",
- "bincode",
- "cogs-gamedev",
- "crossbeam",
- "enum-map",
- "getrandom",
- "macroquad",
- "once_cell",
- "quad-rand",
- "quad-wasmnastics",
- "rand",
- "sapp-wasm",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1419,6 +1398,26 @@ checksum = "06384dfaf645908220d976ae24ed39f6cf92efecb0225ea0a948e403014de527"
 dependencies = [
  "smithay-client-toolkit",
  "wayland-client",
+]
+
+[[package]]
+name = "spacecable"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.7.4",
+ "anyhow",
+ "bincode",
+ "cogs-gamedev",
+ "crossbeam",
+ "enum-map",
+ "getrandom",
+ "macroquad",
+ "once_cell",
+ "quad-rand",
+ "quad-wasmnastics",
+ "rand",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -145,6 +145,7 @@ async fn gameloop() {
 async fn gameloop() {
     let assets = Assets::init().await;
     let assets = Box::leak(Box::new(assets)) as &'static Assets;
+    info!("Made assets");
 
     let mut controls = InputSubscriber::new();
     let mut mode_stack: Vec<Box<dyn Gamemode>> = vec![Box::new(ModeLogo::new())];

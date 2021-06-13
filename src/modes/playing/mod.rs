@@ -9,13 +9,15 @@ use cogs_gamedev::{
 use macroquad::prelude::info;
 
 use crate::{
-    assets::Assets,
+    assets::{Assets, Level},
     boilerplates::{FrameInfo, Gamemode, GamemodeDrawer, Transition},
     controls::{Control, InputSubscriber},
     simulator::{
         board::Board,
+        solutions::Solution,
         transport::{Cable, OmniversalConnector, Port, Resource},
     },
+    utils::{draw::draw_space, profile::Profile},
     HEIGHT, WIDTH,
 };
 
@@ -32,6 +34,9 @@ pub struct ModePlaying {
     selection: Option<Selection>,
 
     start_time: f64,
+
+    level_key: String,
+    level_idx: usize,
 }
 
 /// Info about dragging pipes around.
@@ -47,50 +52,32 @@ pub struct Selection {
 }
 
 impl ModePlaying {
-    pub fn new_temp() -> Self {
-        // let left = OmniversalConnector {
-        //     ports: vec![
-        //         Some(Port::Source(Resource::Water)),
-        //         Some(Port::Source(Resource::Fuel)),
-        //         None,
-        //         None,
-        //         None,
-        //         Some(Port::Sink(Resource::Data(0))),
-        //         Some(Port::Sink(Resource::Electricity(5))),
-        //     ],
-        //     slider: vec![false, false, false, false, false],
-        // };
-        // let right = OmniversalConnector {
-        //     ports: vec![
-        //         Some(Port::Source(Resource::Electricity(5))),
-        //         Some(Port::Source(Resource::Data(0))),
-        //         None,
-        //         None,
-        //         None,
-        //         Some(Port::Sink(Resource::Fuel)),
-        //         Some(Port::Sink(Resource::Water)),
-        //     ],
-        //     slider: vec![false, false, false, false, false, false, false],
-        // };
-        let left = OmniversalConnector {
-            ports: vec![None, None, Some(Port::Source(Resource::Water)), None, None],
-            slider: vec![false, false, false, false, false],
+    pub fn new(level: &Level, solution: Option<&Solution>, level_idx: usize) -> Self {
+        let solution = solution.cloned().unwrap_or_else(|| Solution {
+            cables: level.starting_board.cables.clone(),
+            left: level.starting_board.left.clone(),
+            right: level.starting_board.right.clone(),
+            metrics: None,
+            level_key: level.filename.clone(),
+        });
+        let board = Board {
+            cables: solution.cables,
+            left: solution.left,
+            right: solution.right,
+            width: level.starting_board.width,
         };
-        let right = OmniversalConnector {
-            ports: vec![None, None, Some(Port::Sink(Resource::Water)), None, None],
-            slider: vec![false, false, false, false, false],
-        };
+        let cursor = ICoord::new(
+            board.width as isize / 2 + 1,
+            board.height() as isize / 2 + 1,
+        );
 
-        Self {
-            board: Board {
-                left,
-                right,
-                cables: AHashMap::new(),
-                width: 9,
-            },
-            cursor: ICoord::new(2, 2),
+        ModePlaying {
+            board,
+            cursor,
             selection: None,
             start_time: macroquad::time::get_time(),
+            level_key: level.filename.clone(),
+            level_idx,
         }
     }
 
@@ -118,10 +105,11 @@ impl ModePlaying {
                 }
             }
             Some(selection) => {
+                let mut save_current = false;
+
                 if controls.clicked_down(Control::Select) {
                     // ok we successfully ended!
-                    let sel = self.selection.take().unwrap();
-                    self.board.cables = sel.cables;
+                    save_current = true;
                 } else {
                     // ok let's try to keep dragging things around
                     let maybe_cursor = self.board.mouse_pos();
@@ -424,8 +412,7 @@ impl ModePlaying {
 
                                         if end {
                                             // time to quit
-                                            let sel = self.selection.take().unwrap();
-                                            self.board.cables = sel.cables;
+                                            save_current = true;
                                         }
 
                                         self.cursor = maybe_cursor;
@@ -440,15 +427,30 @@ impl ModePlaying {
                             }
                         } else if continue_adding == Continue::MergeSelection {
                             // we backtracked all the way to a port!
-                            let sel = self.selection.take().unwrap();
-                            self.board.cables = sel.cables;
-                            self.cursor = maybe_cursor;
+                            save_current = true;
                         } else {
                             // We backtracked just once
                             selection.prev_info.pop();
                             self.cursor = maybe_cursor;
                         }
                     } // Else we moved too fast, just keep it the same...
+                }
+
+                if save_current {
+                    let sel = self.selection.take().unwrap();
+                    self.board.cables = sel.cables;
+
+                    let mut profile = Profile::get();
+                    profile.solutions.insert(
+                        self.level_key.clone(),
+                        Solution {
+                            level_key: self.level_key.clone(),
+                            cables: self.board.cables.clone(),
+                            left: self.board.left.clone(),
+                            right: self.board.right.clone(),
+                            metrics: None,
+                        },
+                    );
                 }
             }
         }
@@ -462,6 +464,10 @@ impl Gamemode for ModePlaying {
         frame_info: FrameInfo,
         assets: &Assets,
     ) -> Transition {
+        if controls.clicked_down(Control::Escape) {
+            return Transition::Pop;
+        }
+
         let method = if controls.clicked_down(Control::StepOnce) {
             Some(AdvanceMethod::OnDemand)
         } else if controls.clicked_down(Control::Start) {
@@ -484,16 +490,6 @@ impl Gamemode for ModePlaying {
     fn get_draw_info(&mut self) -> Box<dyn GamemodeDrawer> {
         Box::new(Drawer::new(&self))
     }
-}
-
-fn draw_space(assets: &Assets, time: f32) {
-    use macroquad::prelude::*;
-    gl_use_material(assets.shaders.space);
-    assets.shaders.space.set_uniform("time", time);
-
-    draw_rectangle(0.0, 0.0, WIDTH, HEIGHT, BLACK);
-
-    gl_use_default_material();
 }
 
 /// Does the cable at the given position have all of its exits used?

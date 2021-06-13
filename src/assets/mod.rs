@@ -1,5 +1,8 @@
 #![allow(clippy::eval_order_dependence)]
 
+mod levels;
+pub use levels::Level;
+
 use macroquad::{
     audio::{load_sound, Sound},
     miniquad::*,
@@ -9,10 +12,13 @@ use once_cell::sync::Lazy;
 
 use std::path::PathBuf;
 
+use self::levels::get_levels;
+
 pub struct Assets {
     pub textures: Textures,
     pub sounds: Sounds,
     pub shaders: Shaders,
+    pub levels: Vec<Level>,
 }
 
 impl Assets {
@@ -21,6 +27,7 @@ impl Assets {
             textures: Textures::init().await,
             sounds: Sounds::init().await,
             shaders: Shaders::init().await,
+            levels: get_levels().await,
         }
     }
 }

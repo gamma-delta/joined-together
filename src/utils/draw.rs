@@ -164,3 +164,16 @@ pub fn patch9(
         }
     }
 }
+
+pub fn draw_space(assets: &Assets) {
+    use macroquad::prelude::*;
+    gl_use_material(assets.shaders.space);
+    assets
+        .shaders
+        .space
+        .set_uniform("time", macroquad::time::get_time() as f32);
+
+    draw_rectangle(0.0, 0.0, WIDTH, HEIGHT, BLACK);
+
+    gl_use_default_material();
+}

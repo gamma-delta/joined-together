@@ -9,8 +9,10 @@ use crate::{
     simulator::{
         board::Board,
         floodfill::{FloodFillError, FloodFiller},
+        solutions::Solution,
         transport::Cable,
     },
+    utils::profile::Profile,
 };
 
 use super::ModePlaying;
@@ -32,6 +34,9 @@ pub(super) struct ModeSimulating {
     flooder: FloodFiller,
 
     advance_method: AdvanceMethod,
+
+    level_key: String,
+    level_idx: usize,
 }
 
 impl ModeSimulating {
@@ -40,6 +45,9 @@ impl ModeSimulating {
             board: mode.board.clone(),
             flooder: FloodFiller::new(&mode.board),
             advance_method,
+
+            level_key: mode.level_key.clone(),
+            level_idx: mode.level_idx,
         }
     }
 
@@ -87,18 +95,31 @@ impl ModeSimulating {
             let errors = self.flooder.step(&self.board);
             if !errors.is_empty() {
                 self.advance_method = AdvanceMethod::Errors(errors);
-            } else if self.flooder.did_win() {
+            } else if let Some(metrics) = self.flooder.did_win(&self.board) {
                 // pog
                 self.advance_method = AdvanceMethod::WinScreen {
                     text: self.get_win_text(),
                     appear_progress: 0.0,
-                }
+                };
+
+                let mut profile = Profile::get();
+                let soln = profile
+                    .solutions
+                    .entry(self.level_key.clone())
+                    .or_insert_with(|| Solution {
+                        cables: self.board.cables.clone(),
+                        left: self.board.left.clone(),
+                        right: self.board.right.clone(),
+                        level_key: self.level_key.clone(),
+                        metrics: None,
+                    });
+                soln.metrics = Some(metrics);
             }
         }
     }
 
     fn get_win_text(&self) -> String {
-        let chars_across = 20usize;
+        let chars_across = 26usize;
 
         // subtract length of "CYCLES:"
         let cycles_metric = format!(
@@ -147,6 +168,19 @@ impl Gamemode for ModeSimulating {
         {
             *appear_progress += WIN_BOX_ENTER_SPEED;
             *appear_progress = appear_progress.clamp(0.0, 1.0);
+
+            if *appear_progress > 0.999 && controls.clicked_down(Control::Select) {
+                // TODO: overflows
+                let new_idx = self.level_idx + 1;
+                return Transition::PopNAndPush(
+                    1,
+                    vec![Box::new(ModePlaying::new(
+                        &assets.levels[new_idx],
+                        None,
+                        new_idx,
+                    ))],
+                );
+            }
         } else {
             let advance = self.handle_advance(controls, frame_info);
             if advance {

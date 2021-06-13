@@ -1,5 +1,3 @@
-use std::num::NonZeroU8;
-
 use cogs_gamedev::grids::{Direction4, Rotation};
 use enum_map::{enum_map, EnumMap};
 use serde::{Deserialize, Serialize};
@@ -241,7 +239,7 @@ pub enum TransferError {
 ///
 /// The length of the port slots will never change,
 /// so please don't push or pop or whatever from the vectors.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OmniversalConnector {
     /// Ports, starting at the top.
     /// Index 0 is at y-pos 0, and so on.

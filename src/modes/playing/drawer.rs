@@ -47,7 +47,7 @@ impl GamemodeDrawer for Drawer {
     fn draw(&self, assets: &Assets, frame_info: FrameInfo, render_targets: &mut RenderTargetStack) {
         use macroquad::prelude::*;
 
-        draw_space(assets, frame_info.frames_ran as f32 / 30.0);
+        draw_space(assets);
 
         self.board.draw(assets);
 

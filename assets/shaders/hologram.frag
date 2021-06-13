@@ -91,8 +91,8 @@ vec4 openSimplex2SDerivativesPart(vec3 X) {
 void main() {
     vec4 outCol = texture2D(Texture, uv) * color;
     // If outCol's alpha component is not 1, modify it...
-    vec4 noise = openSimplex2SDerivativesPart(vec3(gl_FragCoord.x / 100.0 + 100.0, gl_FragCoord.y / 10.0, time * 0.01));
-    float modify = smoothstep(abs(noise.w * 2.0), 0.0, 1.0);
-    float opacity = pow(outCol.a, modify / outCol.a);
-    gl_FragColor = vec4(outCol.rgb, opacity);
+    vec4 noise = openSimplex2SDerivativesPart(vec3(gl_FragCoord.x / 80.0 + 100.0, gl_FragCoord.y / 5.0 + 5000.0, time * 0.01));
+    float modify = clamp(abs(noise.w), 0.0, 0.8);
+    float opacity = pow(outCol.a, modify / (outCol.a + 0.001));
+    gl_FragColor = vec4(outCol.rgb, opacity * outCol.a);
 }

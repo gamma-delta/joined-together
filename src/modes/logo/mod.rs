@@ -13,7 +13,7 @@ use rand::Rng;
 
 use std::f32::consts::TAU;
 
-use super::ModePlaying;
+use super::{ModeLevelSelect, ModePlaying};
 
 const BANNER_DISPLAY_SIZE: f32 = WIDTH * 0.6;
 const BANNER_START_TIME: f64 = 0.25;
@@ -96,7 +96,7 @@ impl Gamemode for ModeLogo {
             || controls.clicked_down(Control::Select)
         {
             macroquad::audio::stop_sound(assets.sounds.title_jingle);
-            Transition::Swap(Box::new(ModePlaying::new_temp()))
+            Transition::Swap(Box::new(ModeLevelSelect::new(&assets.levels)))
         } else {
             Transition::None
         }

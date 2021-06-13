@@ -15,7 +15,7 @@ impl GamemodeDrawer for ModeSimulating {
     fn draw(&self, assets: &Assets, frame_info: FrameInfo, render_targets: &mut RenderTargetStack) {
         use macroquad::prelude::*;
 
-        draw_space(assets, frame_info.frames_ran as f32 / 30.0);
+        draw_space(assets);
 
         self.board.draw(assets);
 
@@ -79,7 +79,7 @@ impl GamemodeDrawer for ModeSimulating {
         } = &self.advance_method
         {
             let patch_width = 7;
-            let patch_height = 3;
+            let patch_height = 4;
 
             // Get the origin X/Y
             let ox = WIDTH / 2.0 - (16.0 * patch_width as f32) / 2.0;
@@ -106,16 +106,16 @@ impl GamemodeDrawer for ModeSimulating {
             draw_texture(
                 assets.textures.you_win,
                 WIDTH / 2.0 - assets.textures.you_win.width() / 2.0,
-                oy + 5.0,
+                oy + 9.0,
                 WHITE,
             );
 
             draw::pixel_text(
                 text,
-                ox + 3.0,
-                oy + 12.0,
+                ox + 5.0,
+                oy + 18.0,
                 None,
-                draw::hexcolor(0xc8d45d_aa),
+                draw::hexcolor(0xff5277_dd),
                 assets,
             );
 

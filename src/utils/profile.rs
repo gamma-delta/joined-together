@@ -1,14 +1,21 @@
+use ahash::AHashMap;
 use macroquad::prelude::warn;
 use quad_wasmnastics::storage;
 use serde::{Deserialize, Serialize};
 
+use crate::simulator::solutions::Solution;
+
 /// Profile information. The `get` function loads it from storage; on drop it saves it back.
 #[derive(Serialize, Deserialize)]
-pub struct Profile {}
+pub struct Profile {
+    pub solutions: AHashMap<String, Solution>,
+}
 
 impl Default for Profile {
     fn default() -> Self {
-        Profile {}
+        Profile {
+            solutions: AHashMap::new(),
+        }
     }
 }
 

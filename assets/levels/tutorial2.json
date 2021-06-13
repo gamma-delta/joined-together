@@ -1,0 +1,30 @@
+{
+    "name": "Tutorial 2",
+    "left": {
+        "ports": [{
+                "Source": "Water"
+            },
+            null,
+            {
+                "Sink": "Fuel"
+            }
+        ],
+        "slider": [
+            false, false, false
+        ]
+    },
+    "right": {
+        "ports": [{
+                "Source": "Fuel"
+            },
+            null,
+            {
+                "Sink": "Water"
+            }
+        ],
+        "slider": [
+            false, false, false
+        ]
+    },
+    "width": 3
+}

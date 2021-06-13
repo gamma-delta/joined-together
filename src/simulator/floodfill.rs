@@ -1,10 +1,11 @@
 use ahash::AHashMap;
 use cogs_gamedev::grids::{Direction4, ICoord};
 
-use crate::simulator::transport::TransferError;
+use crate::simulator::transport::{Cable, TransferError};
 
 use super::{
     board::Board,
+    solutions::Metrics,
     transport::{Port, Resource},
 };
 
@@ -19,7 +20,9 @@ pub struct FloodFiller {
     ///
     /// This is purely for drawing purposes and NOT for the flood-fill itself!
     pub visited: AHashMap<(ICoord, bool), Resource>,
+
     pub cycles: u64,
+    pub min_cycles: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -57,6 +60,7 @@ impl FloodFiller {
             tips,
             visited: AHashMap::new(),
             cycles: 0,
+            min_cycles: None,
         }
     }
 
@@ -109,6 +113,9 @@ impl FloodFiller {
                             } else {
                                 // we are done here poggers
                                 *tip_slot = None;
+                                if self.min_cycles.is_none() {
+                                    self.min_cycles = Some(self.cycles);
+                                }
                             }
                         } else {
                             // Nope we spill into space
@@ -125,9 +132,21 @@ impl FloodFiller {
         errors
     }
 
-    /// Did we win?
-    pub fn did_win(&self) -> bool {
-        self.tips.iter().all(Option::is_none)
+    /// Did we win? If so return our metrics
+    pub fn did_win(&self, board: &Board) -> Option<Metrics> {
+        if self.tips.iter().all(Option::is_none) {
+            Some(Metrics {
+                total_cycles: self.cycles,
+                min_cycles: self.min_cycles.unwrap_or(0),
+                crossovers: board
+                    .cables
+                    .values()
+                    .filter(|x| matches!(x, Cable::Crossover { .. }))
+                    .count() as u64,
+            })
+        } else {
+            None
+        }
     }
 }
 

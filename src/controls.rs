@@ -24,6 +24,7 @@ pub enum Control {
     StepOnce,
 
     Escape,
+    Ctrl,
 }
 
 /// Combo keycode and mouse button code
@@ -71,6 +72,8 @@ impl InputSubscriber {
             (KeyCode::Tab, Control::StepOnce),
             //
             (KeyCode::Escape, Control::Escape),
+            (KeyCode::LeftControl, Control::Ctrl),
+            (KeyCode::RightControl, Control::Ctrl),
         ] {
             controls.insert(InputCode::Key(code), control);
         }

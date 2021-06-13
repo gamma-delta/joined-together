@@ -1,0 +1,47 @@
+{
+    "name": "Tutorial 3",
+    "left": {
+        "ports": [
+            null,
+            {
+                "Sink": {
+                    "Electricity": 5
+                }
+            },
+            {
+                "Source": {
+                    "Data": 0
+                }
+            },
+            {
+                "Sink": "Fuel"
+            },
+            null
+        ],
+        "slider": [
+            false, false, false, false, false
+        ]
+    },
+    "right": {
+        "ports": [{
+                "Source": "Fuel"
+            },
+            null,
+            {
+                "Source": {
+                    "Electricity": 5
+                }
+            },
+            null,
+            {
+                "Sink": {
+                    "Data": 0
+                }
+            }
+        ],
+        "slider": [
+            false, false, false, false, false
+        ]
+    },
+    "width": 3
+}

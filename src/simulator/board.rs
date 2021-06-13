@@ -23,6 +23,7 @@ pub struct Board {
     /// This is the width; a width of 7 means X-values from 0-6
     /// can be placed in. (And including the connectors makes it 9, sort of.)
     pub width: usize,
+    #[serde(default)]
     pub cables: AHashMap<ICoord, Cable>,
 }
 

@@ -1,0 +1,13 @@
+{
+    "name": " ",
+    "left": {
+        "ports": [null, null, null, null, null, null, null, null, null, null, null],
+        "slider": []
+    },
+    "right": {
+
+        "ports": [null, null, null, null, null, null, null, null, null, null, null],
+        "slider": []
+    },
+    "width": 15
+}

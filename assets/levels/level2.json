@@ -1,11 +1,10 @@
 {
-    "name": "TUTORIAL 3",
+    "name": "GENERATOR DOCK",
+
     "left": {
-        "ports": [
-            null,
-            {
-                "Sink": {
-                    "Electricity": 5
+        "ports": [{
+                "Source": {
+                    "Electricity": 20
                 }
             },
             {
@@ -13,26 +12,27 @@
                     "Data": 0
                 }
             },
+            null,
+            null,
             {
                 "Sink": "Fuel"
-            },
-            null
+            }
         ],
         "slider": [
             false, false, false, false, false
         ]
     },
     "right": {
-        "ports": [{
-                "Source": "Fuel"
-            },
+        "ports": [
             null,
             {
-                "Source": {
-                    "Electricity": 5
+                "Source": "Fuel"
+            },
+            {
+                "Sink": {
+                    "Electricity": 20
                 }
             },
-            null,
             {
                 "Sink": {
                     "Data": 0

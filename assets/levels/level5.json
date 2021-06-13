@@ -1,22 +1,24 @@
 {
-    "name": "TUTORIAL 3",
+    "name": "PATCH JOB",
+
     "left": {
-        "ports": [
-            null,
-            {
-                "Sink": {
-                    "Electricity": 5
-                }
-            },
-            {
-                "Source": {
-                    "Data": 0
-                }
+        "ports": [{
+                "Source": "Water"
             },
             {
                 "Sink": "Fuel"
             },
-            null
+            {
+                "Sink": {
+                    "Electricity": 12
+                }
+            },
+            {
+                "Sink": "Water"
+            },
+            {
+                "Sink": "Fuel"
+            }
         ],
         "slider": [
             false, false, false, false, false
@@ -24,20 +26,18 @@
     },
     "right": {
         "ports": [{
+                "Source": {
+                    "Electricity": 12
+                }
+            },
+            null,
+            {
                 "Source": "Fuel"
             },
-            null,
             {
-                "Source": {
-                    "Electricity": 5
-                }
+                "Source": "Fuel"
             },
-            null,
-            {
-                "Sink": {
-                    "Data": 0
-                }
-            }
+            null
         ],
         "slider": [
             false, false, false, false, false

@@ -126,11 +126,15 @@ impl Board {
                     };
 
                     let sx = if is_source { 0.0 } else { 16.0 } + if left { 0.0 } else { 32.0 };
-                    let sy = match res {
-                        Resource::Water => 0.0,
-                        Resource::Fuel => 16.0,
-                        Resource::Electricity(_) => 32.0,
-                        Resource::Data(_) => 48.0,
+                    let (sy, decal) = match res {
+                        Resource::Water => (0.0, None),
+                        Resource::Fuel => (16.0, None),
+                        Resource::Electricity(tw) => {
+                            (32.0, Some((3.0, *tw, draw::hexcolor(0xffee83_ff))))
+                        }
+                        Resource::Data(chan) => {
+                            (48.0, Some((8.0, *chan, draw::hexcolor(0xc8d45d_ff))))
+                        }
                     };
 
                     let pos = ICoord::new(x, y as isize);
@@ -146,6 +150,12 @@ impl Board {
                             ..Default::default()
                         },
                     );
+
+                    if let Some((ty, num, color)) = decal {
+                        let text = format!("{:02}", num);
+                        let tx = if left { 2.0 } else { 7.0 };
+                        draw::pixel_text(text, cx + tx, cy + ty, None, color, assets);
+                    }
                 }
             }
         }

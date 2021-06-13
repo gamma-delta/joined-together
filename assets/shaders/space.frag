@@ -114,8 +114,11 @@ void main() {
     vec4 starfields = openSimplex2SDerivatives_Classical(vec3(uv.x * 5.0 - 5000.0, uv.y * 5.0 - 2000.0, -20.0 - sin(time * 0.08)));
     vec4 noise = openSimplex2SDerivatives_Classical(vec3(uv.x * 100.0 + time * 0.1 * sin(time * 0.01), uv.y * 100.0 + time * 0.1 * cos(time * 0.009), 0.0));
 
+    vec4 starSeed = openSimplex2SDerivatives_ImproveXYPlanes(vec3(0.0, uv.x, uv.y));
+    bool hasStar = mod(dot(starSeed, starSeed), 0.5) < 0.01;
+
     // Output to screen
     vec4 backgroundCol = vec4(vec3(105.0 / 255.0, 36.0 / 255.0, 100.0 / 255.0) * background.w * 0.5, 1.0);
     vec4 starCol = vec4(vec3(stars.w * 0.5), 0.5) * starfields.w;
-    gl_FragColor = backgroundCol + starCol + noise.w * 0.1 + background * 0.01;
+    gl_FragColor = backgroundCol + starCol + noise.w * 0.1 + background * 0.01 + vec4(0.9, 0.7, 1.0, 0.5) * float(int(hasStar)) * (starfields.w + stars.w);
 }

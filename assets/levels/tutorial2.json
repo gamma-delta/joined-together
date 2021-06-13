@@ -1,5 +1,5 @@
 {
-    "name": "Tutorial 2",
+    "name": "TUTORIAL 2",
     "left": {
         "ports": [{
                 "Source": "Water"
@@ -26,5 +26,5 @@
             false, false, false
         ]
     },
-    "width": 3
+    "width": 4
 }

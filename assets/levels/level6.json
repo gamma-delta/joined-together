@@ -1,0 +1,68 @@
+{
+    "name": "GALACTIC JUMPER K-8",
+
+    "left": {
+        "ports": [{
+                "Sink": {
+                    "Electricity": 80
+                }
+            },
+            {
+                "Sink": {
+                    "Electricity": 80
+                }
+            },
+            {
+                "Sink": {
+                    "Electricity": 80
+                }
+            },
+            null,
+            null,
+            {
+                "Source": {
+                    "Data": 3
+                }
+            },
+            {
+                "Sink": "Water"
+            }
+        ],
+        "slider": [
+            false, false, false, false, false, false, false
+        ]
+    },
+    "right": {
+        "ports": [
+            null,
+            {
+                "Source": {
+                    "Electricity": 80
+                }
+            },
+            {
+                "Source": "Water"
+            },
+            {
+                "Source": {
+                    "Electricity": 80
+                }
+            },
+            {
+                "Sink": {
+                    "Data": 3
+                }
+            },
+            {
+                "Source": {
+                    "Electricity": 80
+                }
+            },
+            null
+        ],
+        "slider": [
+            false, false, false, false, false, false, false
+        ]
+    },
+    "width": 3
+}

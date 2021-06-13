@@ -5,7 +5,7 @@ use crate::{
     boilerplates::{FrameInfo, GamemodeDrawer, RenderTargetStack},
     modes::playing::{draw_space, simulating::AdvanceMethod},
     simulator::floodfill::FloodFillError,
-    utils::draw,
+    utils::draw::{self, hexcolor},
     HEIGHT, WIDTH,
 };
 
@@ -83,10 +83,15 @@ impl GamemodeDrawer for ModeSimulating {
 
             // Get the origin X/Y
             let ox = WIDTH / 2.0 - (16.0 * patch_width as f32) / 2.0;
-            let oy = appear_progress.quad_out(
+            let oy = appear_progress.clamp(0.0, 1.0).quad_out(
                 patch_height as f32 * -6.0,
                 HEIGHT / 2.0 - (16.0 * patch_height as f32) / 2.0 - 48.0,
-            );
+            ) + if *appear_progress >= 1.0 {
+                // sin starts at 0
+                ((appear_progress - 1.0) * 0.5).sin() * 5.0
+            } else {
+                0.0
+            };
 
             gl_use_material(assets.shaders.hologram);
             assets
@@ -112,7 +117,7 @@ impl GamemodeDrawer for ModeSimulating {
 
             draw::pixel_text(
                 text,
-                ox + 5.0,
+                ox + 6.0,
                 oy + 18.0,
                 None,
                 draw::hexcolor(0xff5277_dd),
@@ -121,5 +126,15 @@ impl GamemodeDrawer for ModeSimulating {
 
             gl_use_default_material();
         }
+
+        let text_x = WIDTH / 2.0 - self.level_name.len() as f32 * 4.0 / 2.0;
+        draw::pixel_text(
+            &self.level_name,
+            text_x,
+            12.0,
+            None,
+            hexcolor(0xff5277_ff),
+            assets,
+        );
     }
 }

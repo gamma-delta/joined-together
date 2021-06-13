@@ -1,10 +1,10 @@
 {
-    "name": "Tutorial 1",
+    "name": "TUTORIAL 1",
     "left": {
         "ports": [
             null,
             {
-                "Source": "Fuel"
+                "Sink": "Fuel"
             },
             null
         ],
@@ -16,7 +16,7 @@
         "ports": [
             null,
             {
-                "Sink": "Fuel"
+                "Source": "Fuel"
             },
             null
         ],

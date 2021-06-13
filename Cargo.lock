@@ -1050,6 +1050,7 @@ dependencies = [
  "quad-rand",
  "quad-wasmnastics",
  "rand",
+ "sapp-wasm",
  "serde",
  "serde_json",
 ]

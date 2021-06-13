@@ -5,7 +5,8 @@ use crate::{
     boilerplates::{FrameInfo, GamemodeDrawer, RenderTargetStack},
     modes::playing::draw_space,
     simulator::board::Board,
-    utils::draw,
+    utils::draw::{self, hexcolor},
+    WIDTH,
 };
 
 use super::ModePlaying;
@@ -19,6 +20,8 @@ pub(super) struct Drawer {
     selecting: bool,
 
     start_time: f64,
+
+    level_name: String,
 }
 
 impl Drawer {
@@ -39,6 +42,7 @@ impl Drawer {
             cursor: mode.cursor,
             selecting: mode.selection.is_some(),
             start_time: mode.start_time,
+            level_name: mode.level_name.clone(),
         }
     }
 }
@@ -62,5 +66,15 @@ impl GamemodeDrawer for Drawer {
         cursor_color.a = 0.6 - ((dt * 3.0).sin() as f32 + 1.0 / 2.0) * 0.1;
         let (cx, cy) = self.board.coord_to_px(self.cursor);
         draw_rectangle(cx, cy, 16.0, 16.0, cursor_color);
+
+        let text_x = WIDTH / 2.0 - self.level_name.len() as f32 * 4.0 / 2.0;
+        draw::pixel_text(
+            &self.level_name,
+            text_x,
+            12.0,
+            None,
+            hexcolor(0xff5277_ff),
+            assets,
+        );
     }
 }

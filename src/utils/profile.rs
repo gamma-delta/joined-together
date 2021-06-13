@@ -1,9 +1,11 @@
 use ahash::AHashMap;
 use macroquad::prelude::warn;
-use quad_wasmnastics::storage;
+use quad_wasmnastics::storage::{self, Location};
 use serde::{Deserialize, Serialize};
 
 use crate::simulator::solutions::Solution;
+
+const SERIALIZATION_VERSION: &str = "5";
 
 /// Profile information. The `get` function loads it from storage; on drop it saves it back.
 #[derive(Serialize, Deserialize)]
@@ -24,7 +26,10 @@ impl Profile {
         let maybe_profile: anyhow::Result<Profile> = try {
             // note we save the raw bincode! it's already gzipped!
             // if we gzipped it here it would jut be gzipped twice
-            let data = storage::load()?;
+            let data = storage::load_from(&Location {
+                version: SERIALIZATION_VERSION.to_string(),
+                ..Default::default()
+            })?;
             bincode::deserialize(&data)?
         };
         match maybe_profile {
@@ -41,7 +46,13 @@ impl Drop for Profile {
     fn drop(&mut self) {
         let res: anyhow::Result<()> = try {
             let data = bincode::serialize(self)?;
-            storage::save(&data)?
+            storage::save_to(
+                &data,
+                &Location {
+                    version: SERIALIZATION_VERSION.to_string(),
+                    ..Default::default()
+                },
+            )?
         };
         if let Err(oh_no) = res {
             warn!("Couldn't save profile!\n{:?}", oh_no);

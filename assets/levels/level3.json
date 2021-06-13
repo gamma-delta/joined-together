@@ -1,0 +1,74 @@
+{
+    "name": "PLANETARY SURVEYOR",
+
+    "left": {
+        "ports": [
+            null,
+            {
+                "Source": {
+                    "Data": 3
+                }
+            },
+            {
+                "Source": {
+                    "Data": 0
+                }
+            },
+            {
+                "Source": {
+                    "Data": 2
+                }
+            },
+            {
+                "Source": {
+                    "Data": 4
+                }
+            },
+            {
+                "Source": {
+                    "Data": 1
+                }
+            },
+            null
+        ],
+        "slider": [
+            false, false, false, false, false
+        ]
+    },
+    "right": {
+
+        "ports": [
+            null,
+            {
+                "Sink": {
+                    "Data": 0
+                }
+            },
+            {
+                "Sink": {
+                    "Data": 1
+                }
+            },
+            {
+                "Sink": {
+                    "Data": 2
+                }
+            },
+            {
+                "Sink": {
+                    "Data": 3
+                }
+            },
+            {
+                "Sink": {
+                    "Data": 4
+                }
+            },
+            null
+        ],
+        "slider": [
+            false, false, false, false, false
+        ]
+    },
+    "width": 5
+}

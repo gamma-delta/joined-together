@@ -14,8 +14,8 @@ copy :
 # Get latest versions of js files
 # wget -nc is "no clobber"
 download :
-	wget -nc https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js \
-	wget -nc https://raw.githubusercontent.com/gamma-delta/quad-wasmnastics/main/js/wasmnastics.js \
+	wget -nc https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js 
+	wget -nc https://raw.githubusercontent.com/gamma-delta/quad-wasmnastics/main/js/wasmnastics.js 
 
 zip : 
 	zip -r game.zip assets game.wasm *.js index.html 

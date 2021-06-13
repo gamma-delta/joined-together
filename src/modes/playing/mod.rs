@@ -37,6 +37,7 @@ pub struct ModePlaying {
 
     level_key: String,
     level_idx: usize,
+    level_name: String,
 }
 
 /// Info about dragging pipes around.
@@ -52,24 +53,26 @@ pub struct Selection {
 }
 
 impl ModePlaying {
-    pub fn new(level: &Level, solution: Option<&Solution>, level_idx: usize) -> Self {
-        let solution = solution.cloned().unwrap_or_else(|| Solution {
-            cables: level.starting_board.cables.clone(),
-            left: level.starting_board.left.clone(),
-            right: level.starting_board.right.clone(),
-            metrics: None,
-            level_key: level.filename.clone(),
-        });
+    pub fn new(level: &Level, level_idx: usize) -> Self {
+        let mut profile = Profile::get();
+        let solution = profile
+            .solutions
+            .entry(level.filename.clone())
+            .or_insert_with(|| Solution {
+                cables: level.starting_board.cables.clone(),
+                left: level.starting_board.left.clone(),
+                right: level.starting_board.right.clone(),
+                metrics: None,
+                level_key: level.filename.clone(),
+            })
+            .clone();
         let board = Board {
             cables: solution.cables,
             left: solution.left,
             right: solution.right,
             width: level.starting_board.width,
         };
-        let cursor = ICoord::new(
-            board.width as isize / 2 + 1,
-            board.height() as isize / 2 + 1,
-        );
+        let cursor = ICoord::new(board.width as isize / 2, board.height() as isize / 2);
 
         ModePlaying {
             board,
@@ -78,6 +81,7 @@ impl ModePlaying {
             start_time: macroquad::time::get_time(),
             level_key: level.filename.clone(),
             level_idx,
+            level_name: level.name.clone(),
         }
     }
 

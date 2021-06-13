@@ -13,7 +13,7 @@ use crate::{
     HEIGHT, WIDTH,
 };
 
-const TEXTBOX_WIDTH: usize = 13;
+const TEXTBOX_WIDTH: usize = 16;
 const TEXTBOX_HEIGHT: usize = 9;
 
 const CORNER_X: f32 = WIDTH / 2.0 - TEXTBOX_WIDTH as f32 * 16.0 / 2.0;
@@ -110,11 +110,7 @@ impl Gamemode for ModeLevelSelect {
                     let level_idx = row - 2;
                     if let Some(new_level) = assets.levels.get(level_idx) {
                         // Maybe load a solution?
-                        let profile = Profile::get();
-                        let solution = profile.solutions.get(&new_level.filename);
-                        return Transition::Push(Box::new(ModePlaying::new(
-                            new_level, solution, level_idx,
-                        )));
+                        return Transition::Push(Box::new(ModePlaying::new(new_level, level_idx)));
                     }
                 }
             }
@@ -125,6 +121,10 @@ impl Gamemode for ModeLevelSelect {
 
     fn get_draw_info(&mut self) -> Box<dyn GamemodeDrawer> {
         Box::new(self.clone())
+    }
+
+    fn on_resume(&mut self, assets: &Assets) {
+        self.text = Self::get_text(&assets.levels, false);
     }
 }
 

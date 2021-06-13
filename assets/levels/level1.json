@@ -1,0 +1,39 @@
+{
+    "name": "CIV CLASS DX-179",
+
+    "left": {
+        "ports": [{
+                "Sink": "Water"
+            },
+            {
+                "Sink": "Water"
+            },
+            null,
+            null,
+            {
+                "Sink": "Fuel"
+            }
+        ],
+        "slider": [
+            false, false, false, false, false
+        ]
+    },
+    "right": {
+        "ports": [
+            null, null,
+            {
+                "Source": "Fuel"
+            },
+            {
+                "Source": "Water"
+            },
+            {
+                "Source": "Water"
+            }
+        ],
+        "slider": [
+            false, false, false, false, false
+        ]
+    },
+    "width": 3
+}

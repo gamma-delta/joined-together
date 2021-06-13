@@ -1,22 +1,22 @@
 {
-    "name": "TUTORIAL 3",
+    "name": "AQUEOUS MINER",
+
     "left": {
-        "ports": [
-            null,
-            {
+        "ports": [{
                 "Sink": {
-                    "Electricity": 5
-                }
-            },
-            {
-                "Source": {
-                    "Data": 0
+                    "Electricity": 10
                 }
             },
             {
                 "Sink": "Fuel"
             },
-            null
+            null,
+            {
+                "Source": "Water"
+            },
+            {
+                "Source": "Water"
+            }
         ],
         "slider": [
             false, false, false, false, false
@@ -24,24 +24,24 @@
     },
     "right": {
         "ports": [{
-                "Source": "Fuel"
+                "Sink": "Water"
             },
-            null,
             {
                 "Source": {
-                    "Electricity": 5
+                    "Electricity": 10
                 }
             },
             null,
             {
-                "Sink": {
-                    "Data": 0
-                }
+                "Source": "Fuel"
+            },
+            {
+                "Sink": "Water"
             }
         ],
         "slider": [
             false, false, false, false, false
         ]
     },
-    "width": 3
+    "width": 4
 }

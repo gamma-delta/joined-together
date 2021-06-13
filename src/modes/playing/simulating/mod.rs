@@ -6,10 +6,11 @@ use crate::{
     assets::Assets,
     boilerplates::{FrameInfo, Gamemode, GamemodeDrawer, Transition},
     controls::{Control, InputSubscriber},
+    modes::ModeEnding,
     simulator::{
         board::Board,
         floodfill::{FloodFillError, FloodFiller},
-        solutions::Solution,
+        solutions::{Metrics, Solution},
         transport::Cable,
     },
     utils::profile::Profile,
@@ -37,6 +38,7 @@ pub(super) struct ModeSimulating {
 
     level_key: String,
     level_idx: usize,
+    level_name: String,
 }
 
 impl ModeSimulating {
@@ -48,6 +50,7 @@ impl ModeSimulating {
 
             level_key: mode.level_key.clone(),
             level_idx: mode.level_idx,
+            level_name: mode.level_name.clone(),
         }
     }
 
@@ -98,7 +101,7 @@ impl ModeSimulating {
             } else if let Some(metrics) = self.flooder.did_win(&self.board) {
                 // pog
                 self.advance_method = AdvanceMethod::WinScreen {
-                    text: self.get_win_text(),
+                    text: self.get_win_text(&metrics),
                     appear_progress: 0.0,
                 };
 
@@ -118,34 +121,34 @@ impl ModeSimulating {
         }
     }
 
-    fn get_win_text(&self) -> String {
-        let chars_across = 26usize;
+    fn get_win_text(&self, metrics: &Metrics) -> String {
+        let chars_across = 25usize;
 
-        // subtract length of "CYCLES:"
+        // subtract length of "TOTAL CYCLES:"
         let cycles_metric = format!(
-            "CYCLES:{:.>width$}",
-            self.flooder.cycles,
-            width = chars_across - 7
+            "TOTAL CYCLES:{:.>width$}",
+            metrics.total_cycles,
+            width = chars_across - 13
+        );
+        let min_cycles_metric = format!(
+            "MIN CYCLES:{:.>width$}",
+            metrics.min_cycles,
+            width = chars_across - 11
         );
 
-        let crossovers = self
-            .board
-            .cables
-            .values()
-            .filter(|x| matches!(x, Cable::Crossover { .. }))
-            .count();
         // length of "CROSSOVERS:"
         let crossover_metric = format!(
             "CROSSOVERS:{:.>width$}",
-            crossovers,
+            metrics.crossovers,
             width = chars_across - 11
         );
 
         format!(
-            "{}\n{}\n\n{:^width$}",
+            "{}\n{}\n{}\n\n\r\r{:^width$}",
             cycles_metric,
+            min_cycles_metric,
             crossover_metric,
-            "CLICK ANYWHERE TO CONTINUE",
+            "CLICK TO CONTINUE",
             width = chars_across
         )
     }
@@ -167,19 +170,17 @@ impl Gamemode for ModeSimulating {
         } = &mut self.advance_method
         {
             *appear_progress += WIN_BOX_ENTER_SPEED;
-            *appear_progress = appear_progress.clamp(0.0, 1.0);
 
             if *appear_progress > 0.999 && controls.clicked_down(Control::Select) {
                 // TODO: overflows
                 let new_idx = self.level_idx + 1;
-                return Transition::PopNAndPush(
-                    1,
-                    vec![Box::new(ModePlaying::new(
-                        &assets.levels[new_idx],
-                        None,
-                        new_idx,
-                    ))],
-                );
+                let trans = if assets.levels.get(new_idx).is_some() {
+                    Box::new(ModePlaying::new(&assets.levels[new_idx], new_idx)) as _
+                } else {
+                    Box::new(ModeEnding::new()) as _
+                };
+                // Pop this state, and the level select below it
+                return Transition::PopNAndPush(2, vec![trans]);
             }
         } else {
             let advance = self.handle_advance(controls, frame_info);
